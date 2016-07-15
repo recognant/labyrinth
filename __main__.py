@@ -1,15 +1,14 @@
 import pygame
 import sys
-from color import *
 from actor import *
 from world import *
 from level import *
-import const
+from const import *
 
 SCREEN = None          
 
 pygame.init()
-SCREEN = pygame.display.set_mode( (const.SCREEN_WIDTH, const.SCREEN_HEIGHT) )#, pygame.FULLSCREEN )
+SCREEN = pygame.display.set_mode( (Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT) )#, pygame.FULLSCREEN )
 pygame.display.set_caption('Labyrinth')
 
 world = World()
@@ -31,7 +30,7 @@ world.start()
 
 running = 1
 while running:
-    tick = CLOCK.tick(const.FPS)
+    tick = CLOCK.tick(Constants.FPS)
     dt = 1.0 / tick
     
     for event in pygame.event.get():
@@ -93,7 +92,7 @@ while running:
         world.getCamera().move((camera_move_x, camera_move_y))
     #world.getCamera().pan(world.player.screenPos())
     
-    SCREEN.fill(Color.BLACK())
+    SCREEN.fill(Color.BLACK)
 
     world.update(dt)
     world.render(SCREEN)

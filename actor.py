@@ -1,22 +1,6 @@
 import pygame
-from color import *
-import const
+from const import *
 from vector import Vector2 as Vec2
-
-class FieldType():
-    BLOCK = 0
-    FREE = 1
-    TURNER = 2
-
-class Direction():
-    LEFT = Vec2(-1, 0)
-    RIGHT = Vec2(1, 0)
-    UP = Vec2(0, -1)
-    DOWN = Vec2(0, 1)
-
-class ItemType():
-    CRATE = 0
-    BOMB = 0
 
 class Entity(pygame.sprite.Sprite):
 
@@ -31,10 +15,9 @@ class Entity(pygame.sprite.Sprite):
         self._parent = parent
         if image is None:
             self.image = pygame.Surface([width, height])
-            self.image.fill(Color.BLACK())
+            self.image.fill(Color.BLACK)
         else:
-            self.image = image
-            self.image = pygame.transform.scale(self.image, (width, height))
+            self.image = pygame.transform.scale(image, (width, height))
         self.rect = self.image.get_rect()
         self.rect.normalize()
         self._x = x
@@ -50,16 +33,16 @@ class Entity(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = self.screenX(), self.screenY() 
 
     def screenX(self):
-        return self._x * const.FIELD_SIZE - self._parent.getCameraOffset()[0]
+        return self._x * Constants.FIELD_SIZE - self._parent.getCameraOffset()[0]
 
     def screenY(self):
-        return self._y * const.FIELD_SIZE - self._parent.getCameraOffset()[1]
+        return self._y * Constants.FIELD_SIZE - self._parent.getCameraOffset()[1]
 
     def pos(self):
         return Vec2(self._x, self._y)
 
     def screenPos(self):
-        return const.FIELD_SIZE * self.pos()
+        return Constants.FIELD_SIZE * self.pos()
 
     def move(self, v):
         self.setPos(self.pos() - v)
@@ -121,12 +104,41 @@ class Entity(pygame.sprite.Sprite):
     def destroy(self):
         self.kill()
 
+class Animation(Entity):
+
+    _images = None
+    _dt = 0
+    _cur = 0
+    _duration = 1
+    _speed = 1
+    _frames = 0
+
+    def __init__(self, world, images, x=0, y=0, width=32, height=32, duration=1):
+        width = max(width, Constants.FIELD_SIZE)
+        height = max(height, Constants.FIELD_SIZE)
+        super(Animation, self).__init__(world, images[0], x, y, width, height)
+        self._images = images
+        self._duration = duration
+        self._frames = len(images)
+        self._speed = max(float(self._frames) / duration, 1.0)
+
+    def update(self, dt):
+        super(Animation, self).update(dt)
+        self._dt = self._dt + self._speed * dt
+        if self._dt >= 1:
+            self._dt = self._dt - 1
+            self._cur = self._cur + 1
+            if self._cur < len(self._images):
+                self.image = pygame.transform.scale(self._images[self._cur], self.rect.size)
+            else:
+                self.destroy()
+
 class Field(Entity):
 
     _type = None
 
     def __init__(self, world, t, path, x, y):
-        super(Field, self).__init__(world, path, x, y, const.FIELD_SIZE, const.FIELD_SIZE)
+        super(Field, self).__init__(world, path, x, y, Constants.FIELD_SIZE, Constants.FIELD_SIZE)
         self._type = t
 
     def getType(self):
@@ -143,7 +155,7 @@ class Field(Entity):
 class Actor(Entity):
     
     def __init__(self, world, path, x, y):
-        super(Actor, self).__init__(world, path, x, y, const.FIELD_SIZE, const.FIELD_SIZE)
+        super(Actor, self).__init__(world, path, x, y, Constants.FIELD_SIZE, Constants.FIELD_SIZE)
 
 class Block(Field):
 
@@ -186,7 +198,7 @@ class Free(Field):
         self._dt = self._dt + dt
         if self._bomb < 0:
             self._dt = 0
-        elif self._dt > 1:
+        elif self._dt >= 1:
             self._dt = self._dt - 1
             self._bomb = self._bomb - 1
         if -1 < self._bomb <= 0:
@@ -225,7 +237,7 @@ class Turner(Field):
 class Player(Actor):
 
     _dt = 0
-    _speed = const.PLAYER_SPEED
+    _speed = Constants.PLAYER_SPEED
     direction = Direction.LEFT
     
     def __init__(self, world, x, y):
@@ -233,7 +245,7 @@ class Player(Actor):
 
     def update(self, dt):
         self._dt = self._dt + self._speed * dt
-        if self._dt > 1:
+        if self._dt >= 1:
             if self._parent.canMove(self.pos(), self.direction):
                 self._parent.move(self.direction)
             else:
