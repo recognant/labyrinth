@@ -1,6 +1,55 @@
 import pygame
 from const import *
 from vector import Vector2 as Vec2
+import random
+
+class Way(list):
+
+    LEFT = self(Direction.LEFT, Direction.LEFT)
+    RIGHT = self(Direction.RIGHT, Direction.RIGHT)
+    UP = self(Direction.UP, Direction.UP)
+    DOWN = self(Direction.DOWN, Direction.DOWN)
+
+    def __init__(self, d_in = 0, d_out = 0, *args, **kwargs):
+        super(Way, self).__init__(*args, **kwargs)
+        super(Way, self).append(d_in)
+        super(Way, self).append(d_out)
+
+    def append(self, item):
+        pass
+
+    @property
+    def In(self):
+        return super(Way, self).__getitem__(0)
+
+    @property
+    def Out(self):
+        return super(Way, self).__getitem__(1)
+
+    def find(self, d):
+        if d == self.In:
+            return self.Out
+        return None
+
+    def __getitem__(self, i):
+        if 0<=i<2:
+            return super(Vector2, self).__getitem__(i)
+        else:
+            raise Exception("Index out of bounds!")
+
+class Ways(list):
+    
+    def __init__(self, ways, *args, **kwargs):
+        super(Ways, self).__init__(*args, **kwargs)
+        self.extend(ways)
+
+    def find(self, d):
+        ways = list()
+        for _,way in enumerate(self):
+            v = way.find(d)
+            if v is not None:
+                ways = ways + v
+        return random.choice(ways)
 
 class Entity(pygame.sprite.Sprite):
 
@@ -45,7 +94,7 @@ class Entity(pygame.sprite.Sprite):
         return Constants.FIELD_SIZE * self.pos()
 
     def move(self, v):
-        self.setPos(self.pos() - v)
+        self.setPos(self.pos() + v)
 
     def setPos(self, v):
         self._x = v.x
@@ -72,9 +121,7 @@ class Entity(pygame.sprite.Sprite):
         return vec(self.rect.width, self.rect.height)
     
     def clicked(self, v):
-        mX = v.x
-        mY = v.y
-        return self.screenX()<=mX<=self.screenX() + self.width and self.screenY()<=mY<=self.screenY() + self.height
+        return self.screenX() <= v.x <= self.screenX() + self.width and self.screenY() <= v.y <= self.screenY() + self.height
 
     def select(self):
         if self.__selected == 0:
@@ -114,9 +161,7 @@ class Animation(Entity):
     _frames = 0
 
     def __init__(self, world, images, x=0, y=0, width=32, height=32, duration=1):
-        width = max(width, Constants.FIELD_SIZE)
-        height = max(height, Constants.FIELD_SIZE)
-        super(Animation, self).__init__(world, images[0], x, y, width, height)
+        super(Animation, self).__init__(world, images[0], x, y, max(width, Constants.FIELD_SIZE), max(height, Constants.FIELD_SIZE))
         self._images = images
         self._duration = duration
         self._frames = len(images)
@@ -214,25 +259,82 @@ class Free(Field):
     def isWalkable(self):
         return True
 
-class Turner(Field):
+class Crossing(Field):
 
-    _direction = None
+    _ways = None
 
-    def __init__(self, world, x, y, direction=None):
-        super(Turner, self).__init__(world, FieldType.TURNER, world.IMAGES_ARROW4, x, y)
-        self._direction = direction
+    def __init__(self, world, x, y, ways):
+        super(CROSSING, self).__init__(world, FieldType.CROSSING, world.IMAGES_ARROW4, x, y)
+        self._ways = ways
 
-    @property
-    def direction(self):
-        if self._direction is None:
-            return Direction.RIGHT
-        return self._direction
+    def find(self, d):
+        way = self._ways.find(d)
+        if way is None:
+            return d
+        return way
 
     def isPassable(self):
         return True
 
     def isWalkable(self):
         return True
+
+class Turner(Field):
+
+    _d = None
+
+    def __init__(self, world, x, y, direction=None):
+        super(Turner, self).__init__(world, FieldType.TURNER, world.IMAGES_ARROW4, x, y)
+        self._d = direction
+
+    def direction(self, d):
+        if self._d is None:
+            return d
+        return self._d
+
+    def isPassable(self):
+        return True
+
+    def isWalkable(self):
+        return True
+
+class DualTurner(Turner):
+
+    _d2 = None
+
+    def __init__(self, world, x, y, directions=None):
+        if len(directions) < 2:
+            raise Exception()
+
+        super(DualTurner, self).__init__(world, x, y, directions[0])
+        self._d2 = directions[1]
+
+    def direction(self, d):
+        if d | self._d or d | self._d2:
+            return random.choice((self._d, self._d2))
+        if d == self._d or d | self._d:
+            return self._d
+        return self._d2
+
+class TripleTurner(DualTurner):
+
+    _d3 = None
+
+    def __init__(self, world, x, y, directions=None):
+        if len(directions) < 3:
+            raise Exception()
+
+        super(DualTurner, self).__init__(world, x, y, (directions[0], directions[1]))
+        self._d3 = directions[2]
+
+    def direction(self, d):
+        if d == self._d:
+            return self._d
+        if d == self._d2:
+            return self._d2
+        if d == self._d3:
+            return self._d3
+        return random.choice((~d, -(~d)))
 
 class Player(Actor):
 

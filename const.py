@@ -16,7 +16,8 @@ class Arsenal():
 class FieldType():
     BLOCK = 0
     FREE = 1
-    TURNER = 2
+    CROSSING = 2
+    TURNER = 3
 
 class Direction():
     LEFT = Vec2(-1, 0)
