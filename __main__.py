@@ -73,6 +73,9 @@ while running:
                 actor_move_up = 0
             if event.key == pygame.K_s:
                 actor_move_down = 0
+            if event.key == pygame.K_r:
+                world.reset()
+                world.start()
 
         if event.type == pygame.MOUSEBUTTONUP:
             mX, mY = pygame.mouse.get_pos()

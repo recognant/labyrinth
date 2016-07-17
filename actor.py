@@ -5,11 +5,6 @@ import random
 
 class Way(list):
 
-    LEFT = self(Direction.LEFT, Direction.LEFT)
-    RIGHT = self(Direction.RIGHT, Direction.RIGHT)
-    UP = self(Direction.UP, Direction.UP)
-    DOWN = self(Direction.DOWN, Direction.DOWN)
-
     def __init__(self, d_in = 0, d_out = 0, *args, **kwargs):
         super(Way, self).__init__(*args, **kwargs)
         super(Way, self).append(d_in)

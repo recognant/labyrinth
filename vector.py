@@ -1,3 +1,5 @@
+import math
+
 class Vector2(list):
 
     def __init__(self, x = 0, y = 0, *args, **kwargs):
@@ -73,7 +75,7 @@ class Vector2(list):
 
     # abs(v1)
     def __abs__(self):
-        return Vector2(abs(self._x), abs(self._y))
+        return math.sqrt(self._x * self._x + self._y * self._y)
 
     # ~v1
     def __inv__(self):

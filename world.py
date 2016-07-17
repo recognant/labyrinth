@@ -11,6 +11,7 @@ class World(pygame.sprite.OrderedUpdates):
     __completed = False
     __camera = None
     __mapLayer = None
+    __level = None
 
     __startPoint = (0, 0)
     __finishPoint = (0, 0)
@@ -41,6 +42,7 @@ class World(pygame.sprite.OrderedUpdates):
         if level.isDefective():
             raise Exception("Level is defective!")
 
+        self.__level = level
         self.__boundaries = Vec2(level.dim[0], level.dim[1])
         
         self.__world = [[0 for j in range(self.__boundaries.y)] for i in range(self.__boundaries.x) ]
@@ -64,6 +66,14 @@ class World(pygame.sprite.OrderedUpdates):
                     self.__finishPoint = Vec2(i, j)
                 if level.data[i][j] == "C":
                     self.__world[i][j].setCrate(True)
+
+    def reset(self):
+        if self.__level is not None:
+            self.stop()
+            self.destroy()
+            self.create(self.__level)
+            return True
+        return False
         
     def render(self, display):
 ##        for i in range(self.__boundaries.x):
